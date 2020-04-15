@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+  <title>My page title</title>
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300|Sonsie+One" rel="stylesheet"
+    type="text/css">
+  <link rel="stylesheet" href="../static/style.css">
+
+  <!-- the below three lines are a fix to get HTML5 semantic elements working in old versions of Internet Explorer-->
+  <!--[if lt IE 9]>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
+    <![endif]-->
+
+</head>
+
+<body>
+  <!-- Here is our main header that is used across all the pages of our website -->
+
+
+
+  <nav>
+    <a style="color:white;padding-left:20px;font-size:30px">
+      Customer Complaints Analysis using ML
+    </a>
+
+
+  </nav>
+
+  <!-- Here is our page's main content -->
+  <div class="row" style="padding-top: 10px">
+    <div class="column left" style="background-color:#e6eeff;">
+      <h3>Select Bank & Dataset</h3>
+      <h5 style="margin-bottom: 10px">Select perentage of Dataset</h5>
+      <select onchange="myFunction(this)" id="percentage" name="percantage"
+        style="background-color: black;color: white;padding:5px 140px;padding-left: 5px">
+        <option value="volvo">25%</option>
+        <option value="saab">50%</option>
+        <option value="fiat">75%</option>
+        <option value="audi">100%</option>
+      </select>
+      <h5 style="margin: 5px">Select bank</h5>
+      <select onchange="myFunction2(this)" id="banks" name="banks"
+        style="background-color: black;color: white;padding:5px 140px;padding-left: 5px">
+      </select>
+      <h5 style="margin: 5px">Period</h5>
+      <select onchange="myFunction3(this)" id="periods" name="periods"
+        style="background-color: black;color: white;padding:5px 160px;padding-left: 5px">
+      </select>
+      <h5 style="margin: 5px">Select File</h5>
+      <input type="file" id="opener" hidden="hidden">
+      <button id="uploader" name="uploader" type="button"
+        style="background-color: black;color: white;padding:5px 160px;padding-left: 5px">
+        Upload
+      </button>
+      <div style="display:flex">
+        <h5 style="margin: 5px">Data Source</h5>
+        <h6 id="selected" style="margin: 5px;display:none;color:cadetblue">selected</h6>
+      </div>
+      <div id="files" name="files"
+        style="background-color:white;border-style: solid;border-color: darkgray;color: white;margin:1vw 4vw 0px 2vw;padding: 5px; height:9rem;border-radius:10%;">
+        <ul id="fileNames" name="filenames"
+          style="overflow-y: scroll;overflow-x: hidden;background-color:white;height:-webkit-fill-available;list-style:none;border-style:groove;border-width: 1px;border-color: darkgray;color: white;margin:1vw;padding: 5px;min-width: 10vw; width:auto;">
+        </ul>
+      </div>
+    </div>
+    <div class="column right" style="background-color:#ffffff;">
+      <h3>Select Bank & Dataset</h3>
+      <svg width="40" height="20" style="padding-left: 350px;padding-top: 0px">
+        <rect width="50" height="20" style="fill:rgb(255,255,255);" />
+      </svg>
+      <canvas id="bar-chart" width="800" height="300" style="margin-top: -30px"></canvas>
+    </div>
+    <div class="column mostright" style="background-color:#ffffff;">
+
+      <p id="demo" style="color: blue;padding-bottom: 0px;margin-bottom: 0px;font-weight: bold;">Percent of Data:</p>
+      <p id="demo2" style="color: blue;padding: 0px;margin: 0px;font-weight: bold;">Bank:</p>
+      <p id="demo3" style="color: blue;padding: 0px;margin: 0px;font-weight: bold">Period:</p>
+    </div>
+
+  </div>
+  <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <script>
+
+    // data list with banks and sales
+
+    var data = {{ bank_list | tojson}};
+
+    // list of periods
+
+    var plist = {{ period_list | tojson}};
+
+
+    let salesPersons = [];
+    let salesAmount = [];
+    data.forEach(function (sp) {
+      salesPersons.push(sp.salesperson);
+      salesAmount.push(sp.sales);
+    });
+
+    var elem = document.getElementById("bar-chart").getContext('2d');
+    var bChart = new Chart(elem, {
+      type: 'horizontalBar',  //bar
+      data: {
+        labels: [...salesPersons],
+        datasets: [
+          {
+            label: "Sales",
+            //backgroundColor: "#ff6384",
+            backgroundColor: "pink",
+            //fillColor: "rgba(255, 100, 0, 0.1)", //version >2 uses background color
+            strokeColor: "black",
+            borderWidth: 1,
+            data: [...salesAmount]
+          }]
+      },
+      options: {
+        legend: { display: false },
+        title: {
+          display: true,
+          text: '# of Complaints'
+        }
+      }
+    });
+
+
+    var x = document.getElementById("banks");
+    for (i in data) {
+      var option = document.createElement("option");
+      option.text = data[i]["salesperson"];
+      x.add(option);
+    }
+    var x = document.getElementById("periods");
+    for (i in plist) {
+      var option = document.createElement("option");
+      option.text = plist[i];
+      x.add(option);
+    }
+
+    function myFunction(selTag) {
+      var x = selTag.options[selTag.selectedIndex].text;
+      document.getElementById("demo").innerHTML = "Percent of Data: " + x;
+    }
+
+    // function updates the bank and graph both
+
+    function myFunction2(selTag) {
+      var y = selTag.options[selTag.selectedIndex].text;
+      document.getElementById("demo2").innerHTML = "Bank: " + y;
+      bChart.data.labels = [salesPersons[selTag.selectedIndex]];
+      bChart.data.datasets[0].data = [salesAmount[selTag.selectedIndex]];
+      bChart.update();
+    }
+
+    function myFunction3(selTag) {
+      var y = selTag.options[selTag.selectedIndex].text;
+      document.getElementById("demo3").innerHTML = "Period: " + y;
+    }
+
+
+    var realbtn = document.getElementById("opener");
+    var custombtn = document.getElementById("uploader");
+    custombtn.addEventListener("click", function () {
+      realbtn.click();
+    });
+
+
+    var file_list = document.getElementById("fileNames")
+
+
+    var css = 'ul li:hover{ background-color:lightgrey} li.selected{background-color:lightgrey}';
+    var style = document.createElement('style');
+
+    if (style.styleSheet) {
+      style.styleSheet.cssText = css;
+    } else {
+      style.appendChild(document.createTextNode(css));
+    }
+    document.getElementsByTagName('head')[0].appendChild(style);
+
+    f = document.getElementById("fileNames")
+    f.addEventListener("click", function (e) {
+      x = document.getElementById("fileNames").childNodes
+      for (var i = 1; i < x.length; i++) {
+        x[i].style.backgroundColor = "";
+      }
+      if (e.target.id === "file") {
+        e.target.style.backgroundColor = "lightgrey";
+        var form_data = new FormData();
+        form_data.append("filename", e.target.childNodes[0].nodeValue)
+        document.getElementById("selected").style.display = "flex"
+        $.ajax({
+          url: "getajax",
+          method: "POST",
+          contentType: false,
+          data: form_data,
+          processData: false,
+          cache: false,
+          success: function (data) { },
+        })
+          .done(function (data) {
+            let salesPersons = [];
+            let salesAmount = [];
+            for (var x=0 ;x<data.data.length;x++){
+              salesPersons.push(data.data[x]['salesperson']);
+              salesAmount.push(data.data[x]['sales']);
+            }
+
+            var elem = document.getElementById("bar-chart").getContext('2d');
+            var bChart = new Chart(elem, {
+              type: 'horizontalBar',  //bar
+              data: {
+                labels: [...salesPersons],
+                datasets: [
+                  {
+                    label: "Sales",
+                    //backgroundColor: "#ff6384",
+                    backgroundColor: "pink",
+                    //fillColor: "rgba(255, 100, 0, 0.1)", //version >2 uses background color
+                    strokeColor: "black",
+                    borderWidth: 1,
+                    data: [...salesAmount]
+                  }]
+              },
+              options: {
+                legend: { display: false },
+                title: {
+                  display: true,
+                  text: '# of Complaints'
+                }
+              }
+            });
+          });
+      }
+    });
+    $(document).ready(function () {
+      $(document).on('change', '#opener', function () {
+        if (realbtn.value) {
+          var li = document.createElement("li");
+          li.appendChild(document.createTextNode(realbtn.value.match(/[\/\\]([\w\d\s\.\-\(\)]+)$/)[1]));
+          li.style.color = "black";
+          li.style.margin = "0"
+          li.style.fontSize = "1"
+          li.style.height = "auto"
+          li.style.overflow = "hidden"
+          li.style.cursor = "pointer"
+          li.id = "file"
+          file_list.appendChild(li);
+        }
+        var name = document.getElementById("opener").files[0].name;
+        var form_data = new FormData();
+        var ext = name.split('.').pop().toLowerCase();
+        if (jQuery.inArray(ext, ['csv']) == -1) {
+          alert("Invalid CSV File");
+        }
+        var oFReader = new FileReader();
+        oFReader.readAsDataURL(document.getElementById("opener").files[0]);
+        form_data.append("file", document.getElementById('opener').files[0]);
+        $.ajax({
+          url: "uploadajax",
+          method: "POST",
+          contentType: false,
+          data: form_data,
+          processData: false,
+          cache: false,
+          success: function (data) { },
+        });
+      });
+    });
+
+  </script>
+
+
+  <!-- And here is our main footer that is used across all the pages of our website -->
+
+
+
+</body>
+
+</html>
